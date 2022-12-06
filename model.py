@@ -45,7 +45,7 @@ class AlexNet(nn.Module):
                          stride=2)
         )
         self.classifier = nn.Sequential(
-            nn.Flatten(0, -1),
+            nn.Flatten(),
             nn.Linear(in_features=256 * 6 * 6,
                       out_features=4096),
             nn.Linear(in_features=4096,
