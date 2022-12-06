@@ -61,6 +61,6 @@ class AlexNet(nn.Module):
 if __name__ == '__main__':
     model = AlexNet(3, 3)
     print(summary(model=model,
-                  input_size=(3, 227, 227),
+                  input_size=(1, 3, 227, 227),
                   col_names=['input_size', 'output_size', 'num_params', 'trainable'],
                   col_width=20))
