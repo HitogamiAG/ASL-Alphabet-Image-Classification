@@ -30,7 +30,7 @@ assert image_path.is_dir(), "Data path doesn't found or not contain train folder
 train_size, val_size, test_size = [float(size) for size in args.data_size.split('/')]
 
 train_loader, val_loader, test_loader, classes = data_setup.load_data(root = image_path,
-                transform=transform,
+                 transform=transform,
                 train_size=train_size,
                 val_size=val_size,
                 test_size=test_size,

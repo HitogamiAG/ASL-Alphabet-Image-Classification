@@ -1,4 +1,10 @@
 import torch
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from typing import Dict
+from torchmetrics.classification import MulticlassConfusionMatrix, MulticlassPrecision, MulticlassRecall, MulticlassF1Score
 from pathlib import Path
 
 def save_model(model: torch.nn.Module,
@@ -43,12 +49,42 @@ def load_model(model: torch.nn.Module,
     
     checkpoint = torch.load(model_load_path)
     model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    if optimizer is not None:
+        try:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        except:
+            print('Optimizer can"t be loaded')
+    
     epoch = checkpoint['epoch']
     loss = checkpoint['loss']
     
     print(f'Model {model_name} loaded.')
     return model, optimizer, epoch, loss
+
+def plot_confusion_matrix(y_pred: torch.Tensor,
+                          y: torch.Tensor,
+                          class_to_idx: Dict[str, int]):
+    ConfMat = MulticlassConfusionMatrix(len(class_to_idx))
+    conf_mat = ConfMat(y_pred, y)
+    sns.heatmap(conf_mat, annot_kws=class_to_idx)
+    plt.title('Confusion matrix')
+    plt.show()
+    
+def plot_classification_report(y_pred: torch.Tensor,
+                          y: torch.Tensor,
+                          class_to_idx: Dict[str, int]):
+    precision = MulticlassPrecision(num_classes=len(class_to_idx), average=None)
+    recall = MulticlassRecall(num_classes=len(class_to_idx), average=None)
+    f1_score = MulticlassF1Score(num_classes=len(class_to_idx), average=None)
+    
+    precision_results = precision(y_pred, y).tolist()
+    recall_results = recall(y_pred, y).tolist()
+    f1_score_results = f1_score(y_pred, y).tolist()
+
+    scores = [precision_results, recall_results, f1_score_results]
+    scores = np.array(scores).T
+    print(pd.DataFrame(data=scores, columns=['Precision', 'Recall', 'F1-Score'], index=class_to_idx.keys()).to_markdown())
 
 if __name__ == '__main__':
     from model import AlexNet

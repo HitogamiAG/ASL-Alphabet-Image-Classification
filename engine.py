@@ -100,6 +100,38 @@ def train(model: torch.nn.Module,
         
     return train_results
 
+def evaluate(model: torch.nn.Module,
+             test_dataloader: torch.utils.data.DataLoader,
+             loss_fn: torch.nn.Module,
+             device: torch.device):
+    
+    test_loss, test_acc = 0, 0
+    
+    y_concatinated = torch.Tensor().type(torch.int).to(device)
+    y_pred_concatinated = torch.Tensor().type(torch.int).to(device)
+    
+    model.eval()
+    with torch.inference_mode():
+        for X, y in tqdm(test_dataloader):
+            
+            X, y = X.to(device), y.to(device)
+            y_concatinated = torch.cat([y_concatinated, y])
+            
+            y_pred = model(X)
+            
+            loss = loss_fn(y_pred, y)
+            test_loss += loss.item()
+            
+            y_pred_classes = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
+            y_pred_concatinated = torch.cat([y_pred_concatinated, y_pred_classes])
+            
+            test_acc += (y_pred_classes == y).sum().item() / len(y_pred)
+            
+    test_loss /= len(test_dataloader)
+    test_acc /= len(test_dataloader)
+    
+    return y_concatinated, y_pred_concatinated, test_loss, test_acc
+
 if __name__ == '__main__':
     from model import AlexNet
     from data_setup import load_data
