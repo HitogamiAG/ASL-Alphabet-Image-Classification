@@ -1,6 +1,6 @@
 import argparse
 import torch
-from torchvision import transforms
+from torchvision import transforms, models
 from model import AlexNet
 from pathlib import Path
 import data_setup, engine, utils
@@ -20,10 +20,8 @@ args = parser.parse_args()
 data_path = Path(args.data_folder)
 image_path = data_path / 'train'
 
-transform = transforms.Compose([
-    transforms.Resize(size=(227, 227)),
-    transforms.ToTensor()
-])
+weights = models.AlexNet_Weights.IMAGENET1K_V1.DEFAULT
+transform = weights.transforms()
 
 assert image_path.is_dir(), "Data path doesn't found or not contain train folder"
 
@@ -36,8 +34,13 @@ train_loader, val_loader, test_loader, classes = data_setup.load_data(root = ima
                 test_size=test_size,
                 batch_size=args.batch_size)
 
-model = AlexNet(intput_shape=3,
-                output_shape=len(classes)).to(args.device)
+model = models.alexnet(weights = weights).to(args.device)
+
+for param in model.parameters():
+    param.requires_grad = False
+    
+model.classifier[6] = torch.nn.Linear(in_features=4096, out_features=len(classes))
+model.to(args.device)
 
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)

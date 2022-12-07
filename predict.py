@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torchvision import transforms
+from torchvision import transforms, models
 
 import data_setup, utils, engine
 from model import AlexNet
@@ -31,10 +31,8 @@ assert image_path.is_dir(), "Data path doesn't found or not contain train folder
 
 train_size, val_size, test_size = [float(size) for size in args.data_size.split('/')]
 
-transform = transforms.Compose([
-    transforms.Resize(size=(227, 227)),
-    transforms.ToTensor()
-])
+weights = models.AlexNet_Weights.IMAGENET1K_V1.DEFAULT
+transform = weights.transforms()
 
 train_loader, val_loader, test_loader, classes = data_setup.load_data(root = image_path,
                 transform=transform,
@@ -43,8 +41,9 @@ train_loader, val_loader, test_loader, classes = data_setup.load_data(root = ima
                 test_size=test_size,
                 batch_size=args.batch_size)
 
-model = AlexNet(intput_shape=3,
-                output_shape=len(classes)).to(args.device)
+model = models.alexnet(weights = weights).to(args.device)
+model.classifier[6] = torch.nn.Linear(in_features=4096, out_features=len(classes))
+model.to(args.device)
 
 model, _, _, _ = utils.load_model(model=model,
                                   load_path='models/' + args.model_name + '/',
