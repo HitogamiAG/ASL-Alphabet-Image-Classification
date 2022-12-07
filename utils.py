@@ -12,7 +12,12 @@ def save_model(model: torch.nn.Module,
     if not save_path.is_dir():
         save_path.mkdir(parents = True,
                         exist_ok = True)
-    assert model_name.endswith(".pth") or model_name.endswith(".pt"), "Model name should end with .pt or .pth"
+    
+    model_save_dir = save_path / model_name.split('/')[0]
+    if not model_save_dir.is_dir():
+        model_save_dir.mkdir(parents = True,
+                             exist_ok = True)
+    
     model_save_path = save_path / model_name
     
     checkpoint = {

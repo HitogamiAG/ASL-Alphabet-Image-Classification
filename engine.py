@@ -1,5 +1,6 @@
 import torch
 from tqdm.auto import tqdm
+import utils
 from typing import Dict, List, Tuple
 
 def train_step(model: torch.nn.Module,
@@ -51,6 +52,7 @@ def test_step(model: torch.nn.Module,
     return test_loss, test_acc
 
 def train(model: torch.nn.Module,
+          model_name: str,
           train_dataloader: torch.utils.data.DataLoader,
           test_dataloader: torch.utils.data.DataLoader,
           loss_fn: torch.nn.Module,
@@ -65,7 +67,7 @@ def train(model: torch.nn.Module,
     }
     
     for epoch in range(epochs):
-        print(f'Epoch {epoch}: Train stage')
+        print(f'Epoch {epoch+1}: Train stage')
         train_loss, train_acc = train_step(
             model=model,
             dataloader=train_dataloader,
@@ -73,7 +75,7 @@ def train(model: torch.nn.Module,
             optimizer=optimizer,
             device=device
         )
-        print(f'Epoch {epoch}: Test stage')
+        print(f'Epoch {epoch+1}: Test stage')
         test_loss, test_acc = test_step(
             model=model,
             dataloader=test_dataloader,
@@ -88,6 +90,13 @@ def train(model: torch.nn.Module,
         
         print(f'Epoch: {epoch+1} | Train loss: {train_loss} | Train acc: {train_acc}')
         print(f' | Test loss {test_loss} | Test acc: {test_acc}')
+        
+        utils.save_model(model,
+                         'models/',
+                         model_name + '/' + f'{model_name}_{epoch+1}.pt',
+                         epoch+1,
+                         optimizer,
+                         test_loss)
         
     return train_results
 
